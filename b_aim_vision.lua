@@ -1,12 +1,12 @@
 -- =================================================================
--- TITLE: B-AIM VISION ULTRA - MAIN LOADER HUB
+-- TITLE: B-AIM VISION ULTRA - MAIN LOADER HUB (PERMANENT CLOUD LINK)
 -- CREDITS: Dual-Save, Pusat Kepignan, & Loader Logic oleh Kamu 😎
 -- COMPATIBILITY: Multi-Device (PC, Android, iOS) 100% All Executors
 -- =================================================================
 
 print("[B-AIM LOADER] Memulai inisialisasi jaringan cloud...")
 
--- ─── 1. MEMANGGIL TAMPILAN VISUAL DARI LINK GITHUB ANDA ───
+-- ─── 1. MEMANGGIL TAMPILAN VISUAL (LINK GITHUB DIKUNCI PERMANEN) ───
 local StatusUI, HasilkanUI = pcall(function()
     return loadstring(game:HttpGet("https://raw.githubusercontent.com/bismaaaa20-cloud/Aimbot-Ai/refs/heads/main/b_aim_ui.lua"))()
 end)
@@ -17,8 +17,7 @@ else
     warn("[B-AIM ERROR] Gagal mengambil UI dari GitHub. Terjadi kesalahan: " .. tostring(HasilkanUI))
 end
 
--- ─── 2. MENYUNTIKKAN INTEGRASI SISTEM AI & ANTI-AFK (SELALU NYALA) ───
--- Inisialisasi database global kepignan agar tersambung penuh dengan UI Anda
+-- ─── 2. MENYUNTIKKAN INTEGRASI SISTEM AI & ANTI-AFK ───
 _G.Kepignan = _G.Kepignan or {
     aim_active = true,
     aim_bone = "Head", 
@@ -33,37 +32,52 @@ local Camera = workspace.CurrentCamera
 local UserInputService = game:GetService("UserInputService")
 local PlaceId = game.PlaceId
 
--- LOGIKA ANTI-AFK PERMANEN (Nyala terus otomatis di latar belakang)
+-- LOGIKA ANTI-AFK PERMANEN
 task.spawn(function()
     local VirtualUser = game:GetService("VirtualUser")
     LocalPlayer.Idled:Connect(function()
         VirtualUser:Button2Down(Vector2.new(0,0), Camera.CFrame)
         task.wait(0.5)
         VirtualUser:Button2Up(Vector2.new(0,0), Camera.CFrame)
-        print("[AI SYSTEM] Anti-AFK Aktif: Berhasil mencegah pemutusan server (Disconnect)!")
+        print("[AI SYSTEM] Anti-AFK Aktif: Berhasil mencegah pemutusan server!")
     end)
     print("[AI SYSTEM] Proteksi Anti-AFK dinyalakan secara permanen!")
 end)
 
--- LOGIKA DETEKSI OTOMATIS GAME (Spesialis Blox Fruits)
+-- LOGIKA DETEKSI OTOMATIS GAME
 local IsBloxFruits = false
-local BloxFruitsIDs = {2753915549, 4442272125, 7449423635} -- ID Sea 1, Sea 2, Sea 3
+local IsKampungKantok = false
+
+local BloxFruitsIDs = {2753915549, 4442272125, 7449423635}
 for _, id in pairs(BloxFruitsIDs) do
     if PlaceId == id then IsBloxFruits = true break end
 end
 
+local KampungKantokIDs = {16410196884, 18512128795} 
+for _, id in pairs(KampungKantokIDs) do
+    if PlaceId == id then IsKampungKantok = true break end
+end
+
 if IsBloxFruits then
-    print("[AI SYSTEM] Modul Optimal Blox Fruits Aktif. Target otomatis dikunci ke tengah badan!")
+    print("[AI SYSTEM] Modul Optimal Blox Fruits Aktif. Target otomatis dikunci ke dada!")
+elseif IsKampungKantok then
+    print("[AI SYSTEM] Modul Optimal Kampung Kantok Aktif! Target dikunci otomatis ke kepala (Head)!")
 else
     print("[AI SYSTEM] Mode Universal Aktif. Mengikuti kepingan setelan scrollbar UI!")
 end
 
--- Mengaktifkan Gambar Lingkaran FOV Mengikuti Ukuran di UI Anda
+-- Mengaktifkan Gambar Lingkaran FOV
 local FOVCircle = nil
 pcall(function()
     if Drawing then
         FOVCircle = Drawing.new("Circle")
-        FOVCircle.Color = IsBloxFruits and Color3.fromRGB(255, 0, 85) or Color3.fromRGB(0, 255, 194)
+        if IsBloxFruits then
+            FOVCircle.Color = Color3.fromRGB(255, 0, 85)
+        elseif IsKampungKantok then
+            FOVCircle.Color = Color3.fromRGB(255, 235, 59)
+        else
+            FOVCircle.Color = Color3.fromRGB(0, 255, 194)
+        end
         FOVCircle.Thickness = 1.5
         FOVCircle.Filled = false
         FOVCircle.Transparency = 0.7
@@ -77,7 +91,9 @@ local function AmbilMusuhTerdekat()
     
     local BagianTubuhTarget = _G.Kepignan.aim_bone
     if IsBloxFruits then
-        BagianTubuhTarget = "HumanoidRootPart" -- Dikunci ke dada agar tebasan pedang & pukulan mili 100% masuk
+        BagianTubuhTarget = "HumanoidRootPart"
+    elseif IsKampungKantok then
+        BagianTubuhTarget = "Head"
     end
     
     for _, v in pairs(Players:GetPlayers()) do
@@ -95,7 +111,7 @@ local function AmbilMusuhTerdekat()
     return TargetTerpilih
 end
 
--- RENDERING LOOP: Menjalankan eksekusi tarikan bidikan secara halus (0% Lag)
+-- RENDERING LOOP: Sistem Pelacak Target Otomatis Menggunakan Kamera CFrame
 game:GetService("RunService").RenderStepped:Connect(function()
     local MousePos = UserInputService:GetMouseLocation()
     if FOVCircle then 
@@ -106,17 +122,21 @@ game:GetService("RunService").RenderStepped:Connect(function()
     
     if _G.Kepignan.aim_active then
         local TargetMengunci = AmbilMusuhTerdekat()
-        -- Berfungsi otomatis baik ditekan (Klik Kanan PC / Shift) maupun otomatis melacak (Layar Sentuh HP)
-        if TargetMengunci and (UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) or UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) or UserInputService.TouchEnabled) then
-            local PosisiKameraTarget, _ = Camera:WorldToViewportPoint(TargetMengunci.Position)
-            local VektorTujuan = (Vector2.new(PosisiKameraTarget.X, PosisiKameraTarget.Y) - MousePos)
-            
+        
+        if TargetMengunci then
             local KecepatanRedam = _G.Kepignan.smooth_speed or 4.5
-            if IsBloxFruits then KecepatanRedam = KecepatanRedam * 0.8 end -- Dibuat lebih lincah khusus Blox Fruits
             
-            mousemoverel(VektorTujuan.X / KecepatanRedam, VektorTujuan.Y / KecepatanRedam)
+            if IsBloxFruits then 
+                KecepatanRedam = KecepatanRedam * 0.8 
+            elseif IsKampungKantok then
+                KecepatanRedam = KecepatanRedam * 0.6 
+            end
+            
+            local PosisiKameraSekarang = Camera.CFrame.Position
+            local CFrameTujuan = CFrame.new(PosisiKameraSekarang, TargetMengunci.Position)
+            Camera.CFrame = Camera.CFrame:Lerp(CFrameTujuan, 1 / KecepatanRedam)
         end
     end
 end)
 
-print("[B-AIM ULTRA] Seluruh sistem gabungan sukses berjalan. Selamat bertarung! 🔥")
+print("[B-AIM ULTRA] Seluruh skrip sistem cloud sukses berjalan. Selamat bertarung! 🔥")
