@@ -26,6 +26,7 @@ local function AutoSave()
         end) 
     end
 end
+
 local LogoBtn = Instance.new("TextButton")
 LogoBtn.Name = "LogoToggle"
 LogoBtn.Parent = ScreenGui
@@ -43,7 +44,6 @@ local LogoStroke = Instance.new("UIStroke")
 LogoStroke.Color = Color3.fromRGB(239, 68, 68) 
 LogoStroke.Thickness = 2
 LogoStroke.Parent = LogoBtn
-
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainPanel"
 MainFrame.Parent = ScreenGui
@@ -102,6 +102,7 @@ ToggleAimBtn.TextXAlignment = Enum.TextXAlignment.Left
 ToggleAimBtn.AutoButtonColor = false
 ToggleAimBtn.Parent = MainFrame
 Instance.new("UICorner", ToggleAimBtn).CornerRadius = UDim.new(0, 5)
+
 local ToggleStroke = Instance.new("UIStroke")
 ToggleStroke.Color = Color3.fromRGB(51, 65, 85)
 ToggleStroke.Parent = ToggleAimBtn
@@ -112,7 +113,6 @@ IndicatorDot.Position = UDim2.new(1, -12, 0.5, -3)
 IndicatorDot.BackgroundColor3 = Color3.fromRGB(34, 197, 94)
 IndicatorDot.Parent = ToggleAimBtn
 Instance.new("UICorner", IndicatorDot).CornerRadius = UDim.new(1, 0)
-
 local FovLabel = Instance.new("TextLabel")
 FovLabel.Size = UDim2.new(0.43, 0, 0.1, 0)
 FovLabel.Position = UDim2.new(0.04, 0, 0.52, 0)
@@ -161,6 +161,7 @@ ScrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(14, 165, 233)
 ScrollingFrame.BorderSizePixel = 0
 ScrollingFrame.Parent = MainFrame
 Instance.new("UICorner", ScrollingFrame).CornerRadius = UDim.new(0, 5)
+
 local ScrollStroke = Instance.new("UIStroke")
 ScrollStroke.Color = Color3.fromRGB(51, 65, 85)
 ScrollStroke.Parent = ScrollingFrame
@@ -177,6 +178,7 @@ local function BuatPilihanTarget(teks_layar, bone_roblox, posisi_y_scale)
     Btn.AutoButtonColor = false
     Btn.Parent = ScrollingFrame
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4)
+    
     local BtnStroke = Instance.new("UIStroke")
     BtnStroke.Color = Color3.fromRGB(30, 41, 59)
     BtnStroke.Parent = Btn
