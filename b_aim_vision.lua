@@ -5,9 +5,10 @@
 
 print("[B-AIM LOADER] Memulai inisialisasi jaringan cloud...")
 
--- ─── 1. MEMANGGIL TAMPILAN VISUAL DARI GITHUB ANDA (KUNCI PERMANEN) ───
+-- ─── 1. STRUKTUR LENGKAP LOADSTRING DENGAN PENUTUP PCALL VALID ───
 local StatusUI, HasilkanUI = pcall(function()
     return loadstring(game:HttpGet("https://raw.githubusercontent.com/bismaaaa20-cloud/Aimbot-Ai/refs/heads/main/b_aim_ui.lua"))()
+end)
 
 if StatusUI then
     print("[B-AIM LOADER] Sukses memuat UI dari GitHub Anda!")
@@ -21,7 +22,9 @@ _G.Kepignan = _G.Kepignan or {
     aim_bone = "Head", 
     smooth_speed = 4.5,
     fov_active = true,
-    fov_size = 350
+    fov_size = 350,
+    target_mode = "Tim Filter",
+    radar_active = true
 }
 
 -- Memuat otomatis konfigurasi lokal jika file penyimpanan ada di perangkat HP
@@ -50,6 +53,55 @@ local Camera = workspace.CurrentCamera
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local PlaceId = game.PlaceId
+-- ─── 3. CLOUD SYNC & LOGIKA PROTEKSI PENGKHIANAT NOMOR 3 (SELALU AKTIF) ───
+if not _G.BAim_Global_Traitors then
+    _G.BAim_Global_Traitors = {}
+end
+
+local DarahTerakhir = 100
+
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        local Character = LocalPlayer.Character
+        local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+        
+        if Humanoid then
+            -- Fitur Nomor 3: Deteksi otomatis jika darah berkurang akibat diserang kawan satu tim
+            if Humanoid.Health < DarahTerakhir and Humanoid.Health > 0 then
+                local PenyerangTerdekat = nil
+                local JarakTerpendek = 40 
+                
+                for _, p in pairs(Players:GetPlayers()) do
+                    if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and Character:FindFirstChild("HumanoidRootPart") then
+                        local Jarak = (p.Character.HumanoidRootPart.Position - Character.HumanoidRootPart.Position).Magnitude
+                        if Jarak < JarakTerpendek then
+                            JarakTerpendek = Jarak
+                            PenyerangTerdekat = p
+                        end
+                    end
+                end
+                
+                local CreatorTag = Humanoid:FindFirstChild("creator")
+                if CreatorTag and CreatorTag.Value and CreatorTag.Value:IsA("Player") then
+                    PenyerangTerdekat = CreatorTag.Value
+                end
+                
+                -- Eksekusi Nomor 3: Kirim nama pengkhianat ke jaringan server secara instan
+                if PenyerangTerdekat then
+                    if not _G.BAim_Global_Traitors[PenyererangTerdekat.Name] then
+                        _G.BAim_Global_Traitors[PenyerangTerdekat.Name] = true
+                        print("[AI NETWORK SYNC] Nomor 3 Aktif! " .. PenyerangTerdekat.Name .. " masuk daftar hitam intelijen server!")
+                    end
+                end
+            end
+            DarahTerakhir = Humanoid.Health
+        else
+            DarahTerakhir = 100
+        end
+    end
+end)
+
 -- LOGIKA ANTI-AFK PERMANEN
 task.spawn(function()
     local VirtualUser = game:GetService("VirtualUser")
@@ -261,4 +313,4 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-print("[B-AIM ULTRA] Seluruh skrip sistem sukses disatukan! Selamat bertarung! 🔥")
+print("[B-AIM ULTRA] Seluruh skrip sistem cloud sukses disatukan! Selamat bertarung! 🔥")
