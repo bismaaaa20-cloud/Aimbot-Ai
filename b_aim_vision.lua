@@ -1,12 +1,11 @@
 -- =================================================================
--- TITLE: B-AIM VISION ULTRA - MAIN LOADER HUB (PERMANENT CLOUD LINK)
--- CREDITS: Dual-Save, Pusat Kepignan, & Loader Logic oleh Kamu 😎
+-- TITLE: B-AIM VISION ULTRA - MAIN ENGINE SYSTEM & LOADER
 -- COMPATIBILITY: Multi-Device (PC, Android, iOS) 100% All Executors
 -- =================================================================
 
 print("[B-AIM LOADER] Memulai inisialisasi jaringan cloud...")
 
--- ─── 1. MEMANGGIL TAMPILAN VISUAL (LINK GITHUB DIKUNCI PERMANEN) ───
+-- ─── 1. MEMANGGIL TAMPILAN VISUAL DARI GITHUB ANDA ───
 local StatusUI, HasilkanUI = pcall(function()
     return loadstring(game:HttpGet("https://raw.githubusercontent.com/bismaaaa20-cloud/Aimbot-Ai/refs/heads/main/b_aim_ui.lua"))()
 end)
@@ -66,7 +65,42 @@ else
     print("[AI SYSTEM] Mode Universal Aktif. Mengikuti kepingan setelan scrollbar UI!")
 end
 
--- Mengaktifkan Gambar Lingkaran FOV
+-- ─── 3. FUNGSI PEMINDAI MUSUH TERDEKAT (ANTI-BUG & TEAM CHECK KETAT) ───
+local function AmbilMusuhTerdekat()
+    local TitikTengahLayar = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    local TargetMaksimum = _G.Kepignan.fov_size or 120
+    local TargetTerpilih = nil
+    
+    local BagianTubuhTarget = _G.Kepignan.aim_bone
+    if IsBloxFruits then
+        BagianTubuhTarget = "HumanoidRootPart"
+    elseif IsKampungKantok then
+        BagianTubuhTarget = "Head"
+    end
+    
+    for _, v in pairs(Players:GetPlayers()) do
+        -- TEAM CHECK: Memastikan hanya membidik musuh, bukan teman satu tim
+        if v ~= LocalPlayer and v.Team ~= LocalPlayer.Team and v.TeamColor ~= LocalPlayer.TeamColor then
+            if v.Character and v.Character:FindFirstChild(BagianTubuhTarget) then
+                local Humanoid = v.Character:FindFirstChildOfClass("Humanoid")
+                if Humanoid and Humanoid.Health > 0 then
+                    local PosisiLayar, BeradaDiLayar = Camera:WorldToViewportPoint(v.Character[BagianTubuhTarget].Position)
+                    if BeradaDiLayar then
+                        -- Bug Fix: Menghitung jarak musuh dari tengah layar screen Anda
+                        local JarakKeTengah = (Vector2.new(PosisiLayar.X, PosisiLayar.Y) - TitikTengahLayar).Magnitude
+                        if JarakKeTengah < TargetMaksimum then
+                            TargetMaksimum = JarakKeTengah
+                            TargetTerpilih = v.Character[BagianTubuhTarget]
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return TargetTerpilih
+end
+
+-- ─── 4. MENGAKTIFKAN GAMBAR LINGKARAN FOV DI TENGAH SCREEN ───
 local FOVCircle = nil
 pcall(function()
     if Drawing then
@@ -84,54 +118,66 @@ pcall(function()
     end
 end)
 
--- JANTUNG UTAMA AI: Pemindai Radar Jarak Musuh Terdekat
-local function AmbilMusuhTerdekat()
-    local TargetMaksimum = _G.Kepignan.fov_size or 120
-    local TargetTerpilih = nil
-    
-    local BagianTubuhTarget = _G.Kepignan.aim_bone
-    if IsBloxFruits then
-        BagianTubuhTarget = "HumanoidRootPart"
-    elseif IsKampungKantok then
-        BagianTubuhTarget = "Head"
-    end
-    
-    for _, v in pairs(Players:GetPlayers()) do
-        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild(BagianTubuhTarget) and v.Character:FindFirstChildOfClass("Humanoid") and v.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
-            local PosisiLayar, BeradaDiLayar = Camera:WorldToViewportPoint(v.Character[BagianTubuhTarget].Position)
-            if BeradaDiLayar then
-                local JarakKursor = (Vector2.new(PosisiLayar.X, PosisiLayar.Y) - UserInputService:GetMouseLocation()).Magnitude
-                if JarakKursor < TargetMaksimum then
-                    TargetMaksimum = JarakKursor
-                    TargetTerpilih = v.Character[BagianTubuhTarget]
-                end
-            end
+-- ─── 5. SISTEM ESP: MEMBEDAKAN TEMAN (HIJAU) DAN MUSUH (MERAH) ───
+local function BuatESP(Player)
+    local function TerapkanHighlight()
+        local Character = Player.Character or Player.CharacterAdded:Wait()
+        if not Character then return end
+        
+        local ESP_Lama = Character:FindFirstChild("B_AIM_ESP")
+        if ESP_Lama then ESP_Lama:Destroy() end
+        
+        local Highlight = Instance.new("Highlight")
+        Highlight.Name = "B_AIM_ESP"
+        Highlight.FillTransparency = 0.5 
+        Highlight.OutlineTransparency = 0 
+        Highlight.Parent = Character
+        
+        -- Cek tim kawan atau lawan untuk pewarnaan kotak ESP
+        if Player.Team == LocalPlayer.Team or Player.TeamColor == LocalPlayer.TeamColor then
+            Highlight.FillColor = Color3.fromRGB(34, 197, 94)
+            Highlight.OutlineColor = Color3.fromRGB(241, 245, 249)
+        else
+            Highlight.FillColor = Color3.fromRGB(239, 68, 68)
+            Highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
         end
     end
-    return TargetTerpilih
+    TerapkanHighlight()
+    Player.CharacterAdded:Connect(TerapkanHighlight)
 end
 
--- RENDERING LOOP: Sistem Pelacak Target Otomatis Menggunakan Kamera CFrame
+for _, p in pairs(Players:GetPlayers()) do
+    if p ~= LocalPlayer then task.spawn(function() BuatESP(p) end) end
+end
+
+Players.PlayerAdded:Connect(function(p)
+    if p ~= LocalPlayer then
+        p:GetPropertyChangedSignal("Team"):Connect(function()
+            task.wait(0.5)
+            BuatESP(p)
+        end)
+        task.spawn(function() BuatESP(p) end)
+    end
+end)
+
+-- ─── 6. RENDERING LOOP UNTUK LOGIKA PENGUNCIAN KAMERA LERP ───
 game:GetService("RunService").RenderStepped:Connect(function()
-    local MousePos = UserInputService:GetMouseLocation()
     if FOVCircle then 
-        FOVCircle.Position = MousePos 
+        -- Mengunci posisi lingkaran jarak tepat di tengah layar HP Anda
+        FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2) 
         FOVCircle.Radius = _G.Kepignan.fov_size or 120
         FOVCircle.Visible = _G.Kepignan.fov_active
     end
     
     if _G.Kepignan.aim_active then
         local TargetMengunci = AmbilMusuhTerdekat()
-        
         if TargetMengunci then
             local KecepatanRedam = _G.Kepignan.smooth_speed or 4.5
-            
             if IsBloxFruits then 
                 KecepatanRedam = KecepatanRedam * 0.8 
             elseif IsKampungKantok then
                 KecepatanRedam = KecepatanRedam * 0.6 
             end
-            
             local PosisiKameraSekarang = Camera.CFrame.Position
             local CFrameTujuan = CFrame.new(PosisiKameraSekarang, TargetMengunci.Position)
             Camera.CFrame = Camera.CFrame:Lerp(CFrameTujuan, 1 / KecepatanRedam)
