@@ -1,4 +1,3 @@
--- 1. Tabel Setelan Global (Data State)
 _G.Kepignan = _G.Kepignan or {
     aim_active = true,
     aim_bone = "Head", 
@@ -7,7 +6,6 @@ _G.Kepignan = _G.Kepignan or {
     fov_size = 120
 }
 
--- 2. Pemanggilan Roblox Service & Pembersihan UI Lama
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -16,13 +14,11 @@ if CoreGui:FindFirstChild("BAimVision_Ultra") then
     CoreGui.BAimVision_Ultra:Destroy()
 end
 
--- 3. Wadah Utama UI ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "BAimVision_Ultra"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- 4. Fungsi Sistem Auto-Save Berkas JSON
 local function AutoSave()
     if writefile then 
         pcall(function() 
@@ -30,7 +26,6 @@ local function AutoSave()
         end) 
     end
 end
--- 1. TOMBOL LOGO MINI [B] BULAT GLOW
 local LogoBtn = Instance.new("TextButton")
 LogoBtn.Name = "LogoToggle"
 LogoBtn.Parent = ScreenGui
@@ -49,7 +44,6 @@ LogoStroke.Color = Color3.fromRGB(14, 165, 233)
 LogoStroke.Thickness = 2.5
 LogoStroke.Parent = LogoBtn
 
--- 2. KOTAK UI UTAMA (DI-PERPANJANG KE SAMPING)
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.Size = UDim2.new(0, 540, 0, 260)
@@ -64,7 +58,6 @@ MainStroke.Color = Color3.fromRGB(30, 41, 59)
 MainStroke.Thickness = 1.8
 MainStroke.Parent = MainFrame
 
--- 3. BAR HEADER ATAS & JUDUL MENU
 local HeaderBar = Instance.new("Frame")
 HeaderBar.Size = UDim2.new(1, 0, 0, 45)
 HeaderBar.BackgroundColor3 = Color3.fromRGB(20, 30, 54)
@@ -89,7 +82,6 @@ HeaderLabel.TextColor3 = Color3.fromRGB(241, 245, 249)
 HeaderLabel.TextXAlignment = Enum.TextXAlignment.Left
 HeaderLabel.Parent = HeaderBar
 
--- 4. TOMBOL SILANG UTK MENUTUP [X]
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Name = "CloseMenu"
 CloseBtn.Parent = HeaderBar
@@ -106,7 +98,6 @@ local CloseStroke = Instance.new("UIStroke")
 CloseStroke.Color = Color3.fromRGB(51, 65, 85)
 CloseStroke.Parent = CloseBtn
 
--- 5. CONTAINER KIRI (TOMBOL INDIKATOR & SLIDER)
 local LeftContainer = Instance.new("Frame")
 LeftContainer.Size = UDim2.new(0, 240, 1, -65)
 LeftContainer.Position = UDim2.new(0, 18, 0, 60)
@@ -169,7 +160,6 @@ SliderProgress.BackgroundColor3 = Color3.fromRGB(14, 165, 233)
 SliderProgress.Parent = SliderFrame
 Instance.new("UICorner", SliderProgress).CornerRadius = UDim.new(0, 5)
 
--- 6. CONTAINER KANAN (DAFTAR SCROLL TARGET BONE musuh)
 local RightContainer = Instance.new("Frame")
 RightContainer.Size = UDim2.new(0, 245, 1, -75)
 RightContainer.Position = UDim2.new(1, -263, 0, 60)
@@ -252,13 +242,14 @@ local CreditLabel = Instance.new("TextLabel")
 CreditLabel.Size = UDim2.new(1, -18, 0, 15)
 CreditLabel.Position = UDim2.new(0, 0, 1, -20)
 CreditLabel.BackgroundTransparency = 1
-CreditLabel.Text = "CORE VERSION: v2.4 // ENGINE STABLE"
+CreditLabel.Text = "CORE VERSION: v2.4 // MINIMIZE ACTIVE"
 CreditLabel.Font = Enum.Font.GothamMedium
 CreditLabel.TextSize = 10
 CreditLabel.TextColor3 = Color3.fromRGB(71, 85, 105)
 CreditLabel.TextXAlignment = Enum.TextXAlignment.Right
 CreditLabel.Parent = MainFrame
--- 1. SISTEM LOGIKA PINTAR DRAG & DROP (LOGO & FRAME UTAMA)
+local IsMinimized = false
+
 local function AktifkanFiturDrag(GuiObject, IsLogo)
     local dragging, dragInput, dragStart, startPos
     local IsMoving = false
@@ -273,15 +264,6 @@ local function AktifkanFiturDrag(GuiObject, IsLogo)
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then 
                     dragging = false 
-                    if IsLogo and not IsMoving then
-                        -- Animasi Muncul Melebar Kebawah (Smooth Tween)
-                        MainFrame.Size = UDim2.new(0, 540, 0, 0)
-                        MainFrame.Visible = true
-                        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 540, 0, 260)}):Play()
-                        
-                        LogoBtn.TextColor3 = Color3.fromRGB(239, 68, 68) -- Berubah Merah saat menu terbuka
-                        LogoStroke.Color = Color3.fromRGB(239, 68, 68)
-                    end
                 end
             end)
         end
@@ -290,45 +272,58 @@ local function AktifkanFiturDrag(GuiObject, IsLogo)
     GuiObject.InputChanged:Connect(function(input)
         if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local delta = input.Position - dragStart
-            if delta.Magnitude > 5 then IsMoving = true end
+            if delta.Magnitude > 7 then 
+                IsMoving = true 
+            end
             GuiObject.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
+
+    if IsLogo then
+        GuiObject.Activated:Connect(function()
+            if not IsMoving then
+                if not MainFrame.Visible then
+                    IsMinimized = false
+                    CloseBtn.Text = "×"
+                    MainFrame.Size = UDim2.new(0, 540, 0, 0)
+                    MainFrame.Visible = true
+                    TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 540, 0, 260)}):Play()
+                    LogoBtn.TextColor3 = Color3.fromRGB(239, 68, 68) 
+                    LogoStroke.Color = Color3.fromRGB(239, 68, 68)
+                else
+                    local CloseTween = TweenService:Create(MainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, 540, 0, 0)})
+                    CloseTween:Play()
+                    CloseTween.Completed:Connect(function()
+                        MainFrame.Visible = false
+                    end)
+                    LogoBtn.TextColor3 = Color3.fromRGB(34, 197, 94) 
+                    LogoStroke.Color = Color3.fromRGB(14, 165, 233)
+                end
+            end
+        end)
+    end
 end
 
 AktifkanFiturDrag(LogoBtn, true)
 AktifkanFiturDrag(MainFrame, false)
 
--- 2. LOGIKA TRANSISI & ANIMASI TOMBOL SILANG [X]
-CloseBtn.MouseEnter:Connect(function() 
-    TweenService:Create(CloseBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(239, 68, 68), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-end)
-CloseBtn.MouseLeave:Connect(function() 
-    TweenService:Create(CloseBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(30, 41, 59), TextColor3 = Color3.fromRGB(241, 245, 249)}):Play()
-end)
-
-CloseBtn.MouseButton1Click:Connect(function()
-    -- Animasi Menyusut saat ditutup
-    local CloseTween = TweenService:Create(MainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, 540, 0, 0)})
-    CloseTween:Play()
-    CloseTween.Completed:Connect(function()
-        MainFrame.Visible = false
-        MainFrame.Size = UDim2.new(0, 540, 0, 260)
-    end)
-    
-    LogoBtn.TextColor3 = Color3.fromRGB(34, 197, 94) -- Kembali Hijau normal
-    LogoStroke.Color = Color3.fromRGB(14, 165, 233)
+CloseBtn.Activated:Connect(function()
+    if not IsMinimized then
+        IsMinimized = true
+        CloseBtn.Text = "+"
+        TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 540, 0, 45)}):Play()
+        LogoBtn.TextColor3 = Color3.fromRGB(14, 165, 233)
+        LogoStroke.Color = Color3.fromRGB(14, 165, 233)
+    else
+        IsMinimized = false
+        CloseBtn.Text = "×"
+        TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 540, 0, 260)}):Play()
+        LogoBtn.TextColor3 = Color3.fromRGB(239, 68, 68) 
+        LogoStroke.Color = Color3.fromRGB(239, 68, 68)
+    end
 end)
 
--- 3. LOGIKA INTERAKSI & HOVER SWITCH AIMBOT (ON/OFF)
-ToggleAimBtn.MouseEnter:Connect(function()
-    TweenService:Create(ToggleStroke, TweenInfo.new(0.15), {Color = Color3.fromRGB(14, 165, 233)}):Play()
-end)
-ToggleAimBtn.MouseLeave:Connect(function()
-    TweenService:Create(ToggleStroke, TweenInfo.new(0.15), {Color = Color3.fromRGB(51, 65, 85)}):Play()
-end)
-
-ToggleAimBtn.MouseButton1Click:Connect(function()
+ToggleAimBtn.Activated:Connect(function()
     _G.Kepignan.aim_active = not _G.Kepignan.aim_active
     
     if _G.Kepignan.aim_active then
@@ -343,7 +338,6 @@ ToggleAimBtn.MouseButton1Click:Connect(function()
     AutoSave()
 end)
 
--- 4. LOGIKA SLIDER TAHAN & GESER INDEKS FOV
 local MenggeserSlider = false
 
 local function UpdateSlider()
@@ -380,4 +374,4 @@ UserInputService.InputEnded:Connect(function(input)
     end
 end)
 
-print("[B-AIM UI] Pemisahan Bagian Logika UI Selesai Dimuat!")
+print("[B-AIM UI] Pemisahan Fragmen Modular Selesai Dimuat!")
