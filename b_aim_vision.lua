@@ -20,7 +20,7 @@ end
 _G.Kepignan = _G.Kepignan or {
     aim_active = true,
     aim_bone = "Head", 
-    smooth_speed = 4.5,
+    smooth_speed = 3.5,
     fov_active = true,
     fov_size = 350,
     target_mode = "Tim Filter",
