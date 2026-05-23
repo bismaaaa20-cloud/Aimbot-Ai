@@ -1,5 +1,4 @@
-
-
+-- 1. Tabel Setelan Global (Data State)
 _G.Kepignan = _G.Kepignan or {
     aim_active = true,
     aim_bone = "Head", 
@@ -8,221 +7,377 @@ _G.Kepignan = _G.Kepignan or {
     fov_size = 120
 }
 
+-- 2. Pemanggilan Roblox Service & Pembersihan UI Lama
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
 if CoreGui:FindFirstChild("BAimVision_Ultra") then
     CoreGui.BAimVision_Ultra:Destroy()
 end
 
+-- 3. Wadah Utama UI ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "BAimVision_Ultra"
 ScreenGui.Parent = CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- ─── TOMBOL LOGO [B] MELAYANG MINI ───
+-- 4. Fungsi Sistem Auto-Save Berkas JSON
+local function AutoSave()
+    if writefile then 
+        pcall(function() 
+            writefile("b_aim_kepignan.json", game:GetService("HttpService"):JSONEncode(_G.Kepignan)) 
+        end) 
+    end
+end
+-- 1. TOMBOL LOGO MINI [B] BULAT GLOW
 local LogoBtn = Instance.new("TextButton")
 LogoBtn.Name = "LogoToggle"
 LogoBtn.Parent = ScreenGui
-LogoBtn.Size = UDim2.new(0, 45, 0, 45)
+LogoBtn.Size = UDim2.new(0, 52, 0, 52)
 LogoBtn.Position = UDim2.new(0, 30, 0, 80)
-LogoBtn.BackgroundColor3 = Color3.fromRGB(26, 28, 38)
+LogoBtn.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
 LogoBtn.Text = "B"
-LogoBtn.Font = Enum.Font.SegoeUIBlk
-LogoBtn.TextSize = 18
-LogoBtn.TextColor3 = Color3.fromRGB(0, 255, 194)
-Instance.new("UICorner", LogoBtn).CornerRadius = UDim.new(0, 4)
+LogoBtn.Font = Enum.Font.FredokaOne
+LogoBtn.TextSize = 24
+LogoBtn.TextColor3 = Color3.fromRGB(34, 197, 94)
+LogoBtn.AutoButtonColor = false
+Instance.new("UICorner", LogoBtn).CornerRadius = UDim.new(1, 0) 
+
 local LogoStroke = Instance.new("UIStroke")
-LogoStroke.Color = Color3.fromRGB(0, 255, 194)
-LogoStroke.Thickness = 1.5
+LogoStroke.Color = Color3.fromRGB(14, 165, 233)
+LogoStroke.Thickness = 2.5
 LogoStroke.Parent = LogoBtn
 
--- ─── KOTAK BESAR UI UTAMA (Slate Dark Blue) ───
+-- 2. KOTAK UI UTAMA (DI-PERPANJANG KE SAMPING)
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
-MainFrame.Size = UDim2.new(0, 440, 0, 300)
-MainFrame.Position = UDim2.new(0.5, -220, 0.5, -150)
-MainFrame.BackgroundColor3 = Color3.fromRGB(18, 19, 28)
+MainFrame.Size = UDim2.new(0, 540, 0, 260)
+MainFrame.Position = UDim2.new(0.5, -270, 0.5, -130)
+MainFrame.BackgroundColor3 = Color3.fromRGB(11, 17, 33)
+MainFrame.ClipsDescendants = true
 MainFrame.Visible = false
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+
 local MainStroke = Instance.new("UIStroke")
-MainStroke.Color = Color3.fromRGB(42, 45, 61)
+MainStroke.Color = Color3.fromRGB(30, 41, 59)
+MainStroke.Thickness = 1.8
 MainStroke.Parent = MainFrame
 
--- Header Menu
+-- 3. BAR HEADER ATAS & JUDUL MENU
+local HeaderBar = Instance.new("Frame")
+HeaderBar.Size = UDim2.new(1, 0, 0, 45)
+HeaderBar.BackgroundColor3 = Color3.fromRGB(20, 30, 54)
+HeaderBar.Parent = MainFrame
+Instance.new("UICorner", HeaderBar).CornerRadius = UDim.new(0, 12)
+
+local HeaderFix = Instance.new("Frame")
+HeaderFix.Size = UDim2.new(1, 0, 0, 12)
+HeaderFix.Position = UDim2.new(0, 0, 1, -12)
+HeaderFix.BackgroundColor3 = Color3.fromRGB(20, 30, 54)
+HeaderFix.BorderSizePixel = 0
+HeaderFix.Parent = HeaderBar
+
 local HeaderLabel = Instance.new("TextLabel")
-HeaderLabel.Size = UDim2.new(1, 0, 0, 35)
-HeaderLabel.BackgroundColor3 = Color3.fromRGB(26, 28, 38)
-HeaderLabel.Text = "  [ B-AIM CONTROL PANEL | VISUAL UI ]"
-HeaderLabel.Font = Enum.Font.Code
+HeaderLabel.Size = UDim2.new(1, -50, 1, 0)
+HeaderLabel.Position = UDim2.new(0, 18, 0, 0)
+HeaderLabel.BackgroundTransparency = 1
+HeaderLabel.Text = "⚡ B-AIM CONTROL PANEL // PREMIUM VISUAL INTERFACE"
+HeaderLabel.Font = Enum.Font.GothamBold
 HeaderLabel.TextSize = 12
-HeaderLabel.TextColor3 = Color3.fromRGB(160, 165, 192)
+HeaderLabel.TextColor3 = Color3.fromRGB(241, 245, 249)
 HeaderLabel.TextXAlignment = Enum.TextXAlignment.Left
-HeaderLabel.Parent = MainFrame
-Instance.new("UICorner", HeaderLabel).CornerRadius = UDim.new(0, 6)
+HeaderLabel.Parent = HeaderBar
 
--- Tombol On/Off Aimbot
+-- 4. TOMBOL SILANG UTK MENUTUP [X]
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Name = "CloseMenu"
+CloseBtn.Parent = HeaderBar
+CloseBtn.Size = UDim2.new(0, 32, 0, 32)
+CloseBtn.Position = UDim2.new(1, -42, 0, 6)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(30, 41, 59)
+CloseBtn.Text = "×"
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 20
+CloseBtn.TextColor3 = Color3.fromRGB(241, 245, 249)
+CloseBtn.AutoButtonColor = false
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 8)
+local CloseStroke = Instance.new("UIStroke")
+CloseStroke.Color = Color3.fromRGB(51, 65, 85)
+CloseStroke.Parent = CloseBtn
+
+-- 5. CONTAINER KIRI (TOMBOL INDIKATOR & SLIDER)
+local LeftContainer = Instance.new("Frame")
+LeftContainer.Size = UDim2.new(0, 240, 1, -65)
+LeftContainer.Position = UDim2.new(0, 18, 0, 60)
+LeftContainer.BackgroundTransparency = 1
+LeftContainer.Parent = MainFrame
+
+local LeftLayout = Instance.new("UIListLayout")
+LeftLayout.Spacing = UDim.new(0, 18)
+LeftLayout.Parent = LeftContainer
+
 local ToggleAimBtn = Instance.new("TextButton")
-ToggleAimBtn.Size = UDim2.new(0, 170, 0, 35)
-ToggleAimBtn.Position = UDim2.new(0, 20, 0, 55)
-ToggleAimBtn.BackgroundColor3 = Color3.fromRGB(26, 28, 38)
-ToggleAimBtn.Text = "AIMBOT: ACTIVE"
-ToggleAimBtn.Font = Enum.Font.SegoeUIBold
-ToggleAimBtn.TextColor3 = Color3.fromRGB(0, 255, 194)
-ToggleAimBtn.Parent = MainFrame
-Instance.new("UICorner", ToggleAimBtn).CornerRadius = UDim.new(0, 4)
+ToggleAimBtn.Size = UDim2.new(1, 0, 0, 42)
+ToggleAimBtn.BackgroundColor3 = Color3.fromRGB(20, 30, 54)
+ToggleAimBtn.Text = "   AIMBOT STATUS: ACTIVE"
+ToggleAimBtn.Font = Enum.Font.GothamBold
+ToggleAimBtn.TextSize = 11
+ToggleAimBtn.TextColor3 = Color3.fromRGB(34, 197, 94)
+ToggleAimBtn.TextXAlignment = Enum.TextXAlignment.Left
+ToggleAimBtn.AutoButtonColor = false
+ToggleAimBtn.Parent = LeftContainer
+Instance.new("UICorner", ToggleAimBtn).CornerRadius = UDim.new(0, 8)
+local ToggleStroke = Instance.new("UIStroke")
+ToggleStroke.Color = Color3.fromRGB(51, 65, 85)
+ToggleStroke.Parent = ToggleAimBtn
 
--- ─── SCROLLBAR TEMPAT PILIHAN TARGET (Atas, Tengah, Bawah) ───
-local ScrollLabel = Instance.new("TextLabel")
-ScrollLabel.Size = UDim2.new(0, 210, 0, 20)
-ScrollLabel.Position = UDim2.new(0, 210, 0, 55)
-ScrollLabel.BackgroundTransparency = 1
-ScrollLabel.Text = "🎯 [ TARGET: KEPALA (ATAS) ]"
-ScrollLabel.Font = Enum.Font.Code
-ScrollLabel.TextSize = 11
-ScrollLabel.TextColor3 = Color3.fromRGB(255, 0, 85)
-ScrollLabel.Parent = MainFrame
+local IndicatorDot = Instance.new("Frame")
+IndicatorDot.Size = UDim2.new(0, 10, 0, 10)
+IndicatorDot.Position = UDim2.new(1, -24, 0.5, -5)
+IndicatorDot.BackgroundColor3 = Color3.fromRGB(34, 197, 94)
+IndicatorDot.Parent = ToggleAimBtn
+Instance.new("UICorner", IndicatorDot).CornerRadius = UDim.new(1, 0)
 
-local ScrollingFrame = Instance.new("ScrollingFrame")
-ScrollingFrame.Size = UDim2.new(0, 210, 0, 100)
-ScrollingFrame.Position = UDim2.new(0, 210, 0, 80)
-ScrollingFrame.BackgroundColor3 = Color3.fromRGB(26, 28, 38)
-ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 135)
-ScrollingFrame.ScrollBarThickness = 6
-ScrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(0, 255, 194)
-ScrollingFrame.Parent = MainFrame
-Instance.new("UICorner", ScrollingFrame).CornerRadius = UDim.new(0, 4)
-local ScrollStroke = Instance.new("UIStroke")
-ScrollStroke.Color = Color3.fromRGB(42, 45, 61)
-ScrollStroke.Parent = ScrollingFrame
+local FovWrapper = Instance.new("Frame")
+FovWrapper.Size = UDim2.new(1, 0, 0, 60)
+FovWrapper.BackgroundTransparency = 1
+FovWrapper.Parent = LeftContainer
 
-local function BuatPilihanTarget(nama_tombol, teks_layar, bone_roblox, posisi_y)
-    local Btn = Instance.new("TextButton")
-    Btn.Size = UDim2.new(1, -10, 0, 35)
-    Btn.Position = UDim2.new(0, 5, 0, posisi_y)
-    Btn.BackgroundColor3 = Color3.fromRGB(18, 19, 28)
-    Btn.Text = teks_layar
-    Btn.Font = Enum.Font.SegoeUIBold
-    Btn.TextSize = 11
-    Btn.TextColor3 = Color3.fromRGB(160, 165, 192)
-    Btn.Parent = ScrollingFrame
-    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4)
-
-    Btn.MouseButton1Click:Connect(function()
-        _G.Kepignan.aim_bone = bone_roblox
-        ScrollLabel.Text = "🎯 [ TARGET: " .. teks_layar .. " ]"
-        Btn.TextColor3 = Color3.fromRGB(0, 255, 194)
-        task.wait(0.3)
-        Btn.TextColor3 = Color3.fromRGB(160, 165, 192)
-    end)
-end
-
-BuatPilihanTarget("Atas", "KEPALA (ATAS)", "Head", 5)
-BuatPilihanTarget("Tengah", "BADAN / DADA (TENGAH)", "HumanoidRootPart", 45)
-BuatPilihanTarget("Bawah", "KAKI (BAWAH)", "LeftFoot", 85)
-
--- ─── PUSAT KEPIGNAN FOV SLIDER ───
 local FovLabel = Instance.new("TextLabel")
-FovLabel.Size = UDim2.new(0, 170, 0, 20)
-FovLabel.Position = UDim2.new(0, 20, 0, 105)
+FovLabel.Size = UDim2.new(1, 0, 0, 22)
 FovLabel.BackgroundTransparency = 1
-FovLabel.Text = "[ PUSAT KEPIGNAN FOV: 120px ]"
-FovLabel.Font = Enum.Font.Code
-FovLabel.TextColor3 = Color3.fromRGB(0, 255, 194)
+FovLabel.Text = "🎯 INTERACTIVE FIELD OF VIEW: 120PX"
+FovLabel.Font = Enum.Font.GothamBold
+FovLabel.TextSize = 11
+FovLabel.TextColor3 = Color3.fromRGB(148, 163, 184)
 FovLabel.TextXAlignment = Enum.TextXAlignment.Left
-FovLabel.Parent = MainFrame
+FovLabel.Parent = FovWrapper
 
 local SliderFrame = Instance.new("TextButton")
-SliderFrame.Size = UDim2.new(0, 170, 0, 8)
-SliderFrame.Position = UDim2.new(0, 20, 0, 130)
-SliderFrame.BackgroundColor3 = Color3.fromRGB(42, 45, 61)
+SliderFrame.Size = UDim2.new(1, 0, 0, 10)
+SliderFrame.Position = UDim2.new(0, 0, 0, 32)
+SliderFrame.BackgroundColor3 = Color3.fromRGB(20, 30, 54)
 SliderFrame.Text = ""
-SliderFrame.Parent = MainFrame
-Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 4)
+SliderFrame.AutoButtonColor = false
+SliderFrame.Parent = FovWrapper
+Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 5)
 
 local SliderProgress = Instance.new("Frame")
 SliderProgress.Size = UDim2.new(0.4, 0, 1, 0)
-SliderProgress.BackgroundColor3 = Color3.fromRGB(0, 255, 194)
+SliderProgress.BackgroundColor3 = Color3.fromRGB(14, 165, 233)
 SliderProgress.Parent = SliderFrame
-Instance.new("UICorner", SliderProgress).CornerRadius = UDim.new(0, 4)
+Instance.new("UICorner", SliderProgress).CornerRadius = UDim.new(0, 5)
 
--- Tombol Save Kepignan (Dual-Save Manual)
-local SaveBtn = Instance.new("TextButton")
-SaveBtn.Size = UDim2.new(1, -40, 0, 40)
-SaveBtn.Position = UDim2.new(0, 20, 1, -60)
-SaveBtn.BackgroundColor3 = Color3.fromRGB(26, 28, 38)
-SaveBtn.Text = "⚡ SYNC & SAVE KEPIGNAN"
-SaveBtn.Font = Enum.Font.SegoeUIBold
-SaveBtn.TextColor3 = Color3.fromRGB(0, 255, 194)
-SaveBtn.Parent = MainFrame
-Instance.new("UICorner", SaveBtn).CornerRadius = UDim.new(0, 4)
-Instance.new("UIStroke", SaveBtn).Color = Color3.fromRGB(0, 255, 194)
+-- 6. CONTAINER KANAN (DAFTAR SCROLL TARGET BONE musuh)
+local RightContainer = Instance.new("Frame")
+RightContainer.Size = UDim2.new(0, 245, 1, -75)
+RightContainer.Position = UDim2.new(1, -263, 0, 60)
+RightContainer.BackgroundTransparency = 1
+RightContainer.Parent = MainFrame
 
--- Teks Credit Kamu
+local ScrollLabel = Instance.new("TextLabel")
+ScrollLabel.Size = UDim2.new(1, 0, 0, 22)
+ScrollLabel.BackgroundTransparency = 1
+ScrollLabel.Text = "🛡️ SELECTED TARGET BONE: HEAD"
+ScrollLabel.Font = Enum.Font.GothamBold
+ScrollLabel.TextSize = 11
+ScrollLabel.TextColor3 = Color3.fromRGB(14, 165, 233)
+ScrollLabel.TextXAlignment = Enum.TextXAlignment.Left
+ScrollLabel.Parent = RightContainer
+
+local ScrollingFrame = Instance.new("ScrollingFrame")
+ScrollingFrame.Size = UDim2.new(1, 0, 1, -25)
+ScrollingFrame.Position = UDim2.new(0, 0, 0, 25)
+ScrollingFrame.BackgroundColor3 = Color3.fromRGB(20, 30, 54)
+ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 140)
+ScrollingFrame.ScrollBarThickness = 4
+ScrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(14, 165, 233)
+ScrollingFrame.BorderSizePixel = 0
+ScrollingFrame.Parent = RightContainer
+Instance.new("UICorner", ScrollingFrame).CornerRadius = UDim.new(0, 8)
+local ScrollStroke = Instance.new("UIStroke")
+ScrollStroke.Color = Color3.fromRGB(51, 65, 85)
+ScrollStroke.Parent = ScrollingFrame
+
+local ScrollPadding = Instance.new("UIPadding")
+ScrollPadding.PaddingTop = UDim.new(0, 8)
+ScrollPadding.PaddingLeft = UDim.new(0, 8)
+ScrollPadding.PaddingRight = UDim.new(0, 8)
+ScrollPadding.Parent = ScrollingFrame
+
+local ScrollList = Instance.new("UIListLayout")
+ScrollList.Spacing = UDim.new(0, 6)
+ScrollList.Parent = ScrollingFrame
+
+local function BuatPilihanTarget(teks_layar, bone_roblox)
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(1, 0, 0, 36)
+    Btn.BackgroundColor3 = Color3.fromRGB(11, 17, 33)
+    Btn.Text = teks_layar
+    Btn.Font = Enum.Font.GothamBold
+    Btn.TextSize = 11
+    Btn.TextColor3 = Color3.fromRGB(148, 163, 184)
+    Btn.AutoButtonColor = false
+    Btn.Parent = ScrollingFrame
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
+    local BtnStroke = Instance.new("UIStroke")
+    BtnStroke.Color = Color3.fromRGB(30, 41, 59)
+    BtnStroke.Parent = Btn
+
+    Btn.MouseEnter:Connect(function()
+        TweenService:Create(Btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(20, 30, 54), TextColor3 = Color3.fromRGB(241, 245, 249)}):Play()
+        TweenService:Create(BtnStroke, TweenInfo.new(0.15), {Color = Color3.fromRGB(14, 165, 233)}):Play()
+    end)
+    Btn.MouseLeave:Connect(function()
+        TweenService:Create(Btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(11, 17, 33), TextColor3 = Color3.fromRGB(148, 163, 184)}):Play()
+        TweenService:Create(BtnStroke, TweenInfo.new(0.15), {Color = Color3.fromRGB(30, 41, 59)}):Play()
+    end)
+
+    Btn.MouseButton1Click:Connect(function()
+        _G.Kepignan.aim_bone = bone_roblox
+        ScrollLabel.Text = "🛡️ SELECTED TARGET BONE: " .. string.upper(bone_roblox)
+        AutoSave()
+        TweenService:Create(Btn, TweenInfo.new(0.05), {TextColor3 = Color3.fromRGB(34, 197, 94)}):Play()
+        task.wait(0.1)
+        TweenService:Create(Btn, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(241, 245, 249)}):Play()
+    end)
+end
+
+BuatPilihanTarget("HEAD (KEPALA ATAS)", "Head")
+BuatPilihanTarget("TORSO (DADA TENGAH)", "HumanoidRootPart")
+BuatPilihanTarget("FEET (KAKI BAWAH)", "LeftFoot")
+
 local CreditLabel = Instance.new("TextLabel")
-CreditLabel.Size = UDim2.new(1, -40, 0, 15)
-CreditLabel.Position = UDim2.new(0, 20, 1, -18)
+CreditLabel.Size = UDim2.new(1, -18, 0, 15)
+CreditLabel.Position = UDim2.new(0, 0, 1, -20)
 CreditLabel.BackgroundTransparency = 1
-CreditLabel.Text = "Dual-Save Core System dirancang oleh: Kamu 😎"
-CreditLabel.Font = Enum.Font.SourceSansItalic
-CreditLabel.TextColor3 = Color3.fromRGB(101, 106, 138)
+CreditLabel.Text = "CORE VERSION: v2.4 // ENGINE STABLE"
+CreditLabel.Font = Enum.Font.GothamMedium
+CreditLabel.TextSize = 10
+CreditLabel.TextColor3 = Color3.fromRGB(71, 85, 105)
 CreditLabel.TextXAlignment = Enum.TextXAlignment.Right
 CreditLabel.Parent = MainFrame
+-- 1. SISTEM LOGIKA PINTAR DRAG & DROP (LOGO & FRAME UTAMA)
+local function AktifkanFiturDrag(GuiObject, IsLogo)
+    local dragging, dragInput, dragStart, startPos
+    local IsMoving = false
 
--- ─── INTERAKSI LOGIKA UI ───
-local dragging, dragInput, dragStart, startPos
-LogoBtn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = LogoBtn.Position
-    end
+    GuiObject.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            IsMoving = false
+            dragStart = input.Position
+            startPos = GuiObject.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then 
+                    dragging = false 
+                    if IsLogo and not IsMoving then
+                        -- Animasi Muncul Melebar Kebawah (Smooth Tween)
+                        MainFrame.Size = UDim2.new(0, 540, 0, 0)
+                        MainFrame.Visible = true
+                        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 540, 0, 260)}):Play()
+                        
+                        LogoBtn.TextColor3 = Color3.fromRGB(239, 68, 68) -- Berubah Merah saat menu terbuka
+                        LogoStroke.Color = Color3.fromRGB(239, 68, 68)
+                    end
+                end
+            end)
+        end
+    end)
+
+    GuiObject.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            if delta.Magnitude > 5 then IsMoving = true end
+            GuiObject.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+AktifkanFiturDrag(LogoBtn, true)
+AktifkanFiturDrag(MainFrame, false)
+
+-- 2. LOGIKA TRANSISI & ANIMASI TOMBOL SILANG [X]
+CloseBtn.MouseEnter:Connect(function() 
+    TweenService:Create(CloseBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(239, 68, 68), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 end)
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        LogoBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
+CloseBtn.MouseLeave:Connect(function() 
+    TweenService:Create(CloseBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(30, 41, 59), TextColor3 = Color3.fromRGB(241, 245, 249)}):Play()
 end)
 
-LogoBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
-    LogoBtn.TextColor3 = MainFrame.Visible and Color3.fromRGB(255, 0, 85) or Color3.fromRGB(0, 255, 194)
-    LogoStroke.Color = MainFrame.Visible and Color3.fromRGB(255, 0, 85) or Color3.fromRGB(0, 255, 194)
+CloseBtn.MouseButton1Click:Connect(function()
+    -- Animasi Menyusut saat ditutup
+    local CloseTween = TweenService:Create(MainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, 540, 0, 0)})
+    CloseTween:Play()
+    CloseTween.Completed:Connect(function()
+        MainFrame.Visible = false
+        MainFrame.Size = UDim2.new(0, 540, 0, 260)
+    end)
+    
+    LogoBtn.TextColor3 = Color3.fromRGB(34, 197, 94) -- Kembali Hijau normal
+    LogoStroke.Color = Color3.fromRGB(14, 165, 233)
+end)
+
+-- 3. LOGIKA INTERAKSI & HOVER SWITCH AIMBOT (ON/OFF)
+ToggleAimBtn.MouseEnter:Connect(function()
+    TweenService:Create(ToggleStroke, TweenInfo.new(0.15), {Color = Color3.fromRGB(14, 165, 233)}):Play()
+end)
+ToggleAimBtn.MouseLeave:Connect(function()
+    TweenService:Create(ToggleStroke, TweenInfo.new(0.15), {Color = Color3.fromRGB(51, 65, 85)}):Play()
 end)
 
 ToggleAimBtn.MouseButton1Click:Connect(function()
     _G.Kepignan.aim_active = not _G.Kepignan.aim_active
-    ToggleAimBtn.Text = _G.Kepignan.aim_active and "AIMBOT: ACTIVE" or "AIMBOT: DISABLED"
-    ToggleAimBtn.TextColor3 = _G.Kepignan.aim_active and Color3.fromRGB(0, 255, 194) or Color3.fromRGB(255, 0, 85)
+    
+    if _G.Kepignan.aim_active then
+        ToggleAimBtn.Text = "   AIMBOT STATUS: ACTIVE"
+        TweenService:Create(ToggleAimBtn, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(34, 197, 94)}):Play()
+        TweenService:Create(IndicatorDot, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(34, 197, 94), Size = UDim2.new(0, 10, 0, 10), Position = UDim2.new(1, -24, 0.5, -5)}):Play()
+    else
+        ToggleAimBtn.Text = "   AIMBOT STATUS: DISABLED"
+        TweenService:Create(ToggleAimBtn, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(239, 68, 68)}):Play()
+        TweenService:Create(IndicatorDot, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(239, 68, 68), Size = UDim2.new(0, 8, 0, 8), Position = UDim2.new(1, -23, 0.5, -4)}):Play()
+    end
+    AutoSave()
 end)
 
-SliderFrame.MouseButton1Down:Connect(function()
-    local koneksi
-    koneksi = UserInputService.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            local relativeX = UserInputService:GetMouseLocation().X - SliderFrame.AbsolutePosition.X
-            local persentase = math.clamp(relativeX / SliderFrame.AbsoluteSize.X, 0, 1)
-            SliderProgress.Size = UDim2.new(persentase, 0, 1, 0)
-            _G.Kepignan.fov_size = math.round(10 + (persentase * 290))
-            FovLabel.Text = "[ PUSAT KEPIGNAN FOV: " .. tostring(_G.Kepignan.fov_size) .. "px ]"
+-- 4. LOGIKA SLIDER TAHAN & GESER INDEKS FOV
+local MenggeserSlider = false
+
+local function UpdateSlider()
+    local MousePos = UserInputService:GetMouseLocation().X
+    local RelativeX = MousePos - SliderFrame.AbsolutePosition.X
+    local Persentase = math.clamp(RelativeX / SliderFrame.AbsoluteSize.X, 0, 1)
+    
+    SliderProgress.Size = UDim2.new(Persentase, 0, 1, 0)
+    _G.Kepignan.fov_size = math.round(10 + (Persentase * 290))
+    FovLabel.Text = "🎯 INTERACTIVE FIELD OF VIEW: " .. tostring(_G.Kepignan.fov_size) .. "PX"
+end
+
+SliderFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        MenggeserSlider = true
+        TweenService:Create(SliderProgress, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(0, 245, 212)}):Play()
+        UpdateSlider()
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if MenggeserSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        UpdateSlider()
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        if MenggeserSlider then
+            MenggeserSlider = false
+            TweenService:Create(SliderProgress, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(14, 165, 233)}):Play()
+            AutoSave()
         end
-    end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            if koneksi then koneksi:Disconnect() end
-        end
-    end)
+    end
 end)
 
-SaveBtn.MouseButton1Click:Connect(function()
-    SaveBtn.Text = "✓ SYNCED SUCCESS"
-    SaveBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 194)
-    SaveBtn.TextColor3 = Color3.fromRGB(18, 19, 28)
-    if writefile then pcall(function() writefile("b_aim_kepignan.json", game:GetService("HttpService"):JSONEncode(_G.Kepignan)) end) end
-    task.wait(1)
-    SaveBtn.Text = "⚡ SYNC & SAVE KEPIGNAN"
-    SaveBtn.BackgroundColor3 = Color3.fromRGB(26, 28, 38)
-    SaveBtn.TextColor3 = Color3.fromRGB(0, 255, 194)
-end)
-
-print("[B-AIM UI] Berkas Tempat Visual Sukses Dimuat!")
+print("[B-AIM UI] Pemisahan Bagian Logika UI Selesai Dimuat!")
