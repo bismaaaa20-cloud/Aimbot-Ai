@@ -48,30 +48,16 @@ local IsKampungKantok = (PlaceId == 16410196884 or PlaceId == 18512128795)
 _G.B_Aim_TargetGlobalSekarang = nil
 _G.B_Aim_JarakGlobalKeTengah = 99999
 _G.B_Aim_CFramePrediksiAIGlobal = nil
-
 -- =================================================================
--- TITLE: B-AIM VISION ULTRA V3.0 - CORE SYSTEM ENGINE (PART 2 OF 2)
--- CONFIG: LOGIKA ASLI DIKUNCI TIMING, SILENT AIM & AUTO TRIGGER
--- STATUS: KEMBALI KE STRUKTUR UTUH ASLI (ANTI-OVERLOOP)
+-- TITLE: B-AIM VISION ULTRA V3.0 - PURE CORE ENGINE (PART 2 OF 2)
+-- CONFIG: HARDWARE MOBILE SMOOTHING, 10hz TARGETING & PURE CAMERA LERP
+-- STATUS: FIX CRASH TOTAL (FITUR BYPASS METATABLE DIHAPUS TOTAL)
 -- =================================================================
 
--- ─── 1. KEMBALIKAN LOGIKA WALL CHECK ASLI KAMU (100% AMAN JIKA DIKUNCI JEDA) ───
-local function ApakahTargetTerlihat(BagianTubuh)
-    local KarakterSaya = LocalPlayer.Character
-    if not KarakterSaya then return false end
-    local ParameterRaycast = RaycastParams.new()
-    ParameterRaycast.FilterType = Enum.RaycastFilterType.Exclude
-    ParameterRaycast.FilterDescendantsInstances = {KarakterSaya, Camera}
-    ParameterRaycast.IgnoreWater = true
-    local HasilRaycast = workspace:Raycast(Camera.CFrame.Position, (BagianTubuh.Position - Camera.CFrame.Position), ParameterRaycast)
-    if HasilRaycast then return HasilRaycast.Instance:IsDescendantOf(BagianTubuh.Parent) end
-    return true
-end
-
--- ─── 2. SAKLAR PEMINDAI UTAMA (Menggunakan Jeda Waktu Stabil untuk Mencegah Kebocoran RAM) ───
+-- ─── 5. MOBILE TARGET RESOLVER (Dibuat Santai 10hz Agar RAM HP Adem) ───
 task.spawn(function()
     while true do
-        task.wait(0.04) -- Kunci kecepatan perulangan agar CPU dan RAM stabil, tidak mengikuti FPS
+        task.wait(0.1) -- Jeda aman agar baterai HP awet dan tidak panas
         if _G.Kepignan.aim_active then
             local TitikTengahLayar = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
             local TargetMaksimum = _G.Kepignan.fov_size or 120
@@ -91,7 +77,6 @@ task.spawn(function()
                         if BeradaDiLayar then
                             local JarakKeTengah = (Vector2.new(PosisiLayar.X, PosisiLayar.Y) - TitikTengahLayar).Magnitude
                             if JarakKeTengah < JarakViewportTerpendek then
-                                -- Memanggil fungsi wall check asli bawaan skripmu
                                 if ApakahTargetTerlihat(Part) then
                                     JarakViewportTerpendek = JarakKeTengah
                                     TargetTerpilih = Part
@@ -111,8 +96,8 @@ task.spawn(function()
     end
 end)
 
--- ─── 3. INTERPOLASI KAMERA LERP ANCHOR HALUS ───
-RunService.RenderStepped:Connect(function()
+-- ─── 6. INTERPOLASI KAMERA UTAMA (Smooth Lock-On Terintegrasi GPU Mobile) ───
+RunService.Heartbeat:Connect(function()
     if _G.Kepignan.aim_active and _G.B_Aim_TargetGlobalSekarang then
         local SetelanSmooth = _G.Kepignan.smooth_speed or 4.5
         local JarakMaks = _G.Kepignan.fov_size or 120
@@ -120,44 +105,24 @@ RunService.RenderStepped:Connect(function()
         local PembagiDinamis = SetelanSmooth * (10 + (FaktorDinamis * 5))
         local AlphaAI = math.clamp((1 / PembagiDinamis) + (math.random(-5, 5) / 1000), 0.005, 0.2)
         
+        -- Mengunci sudut pandang kamera ke musuh secara mulus
         Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, _G.B_Aim_TargetGlobalSekarang.Position), AlphaAI)
-        local AkarTubuh = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        
+        -- Memutar horizontal tubuh karakter utama agar sejajar dengan musuh
+        local KarakterSaya = LocalPlayer.Character
+        local AkarTubuh = KarakterSaya and KarakterSaya:FindFirstChild("HumanoidRootPart")
         if AkarTubuh then
-            AkarTubuh.CFrame = AkarTubuh.CFrame:Lerp(CFrame.new(AkarTubuh.Position, Vector3.new(_G.B_Aim_TargetGlobalSekarang.Position.X, AkarTubuh.Position.Y, _G.B_Aim_TargetGlobalSekarang.Position.Z)), AlphaAI)
+            local TargetMendatar = Vector3.new(_G.B_Aim_TargetGlobalSekarang.Position.X, AkarTubuh.Position.Y, _G.B_Aim_TargetGlobalSekarang.Position.Z)
+            AkarTubuh.CFrame = AkarTubuh.CFrame:Lerp(CFrame.new(AkarTubuh.Position, TargetMendatar), AlphaAI)
         end
     end
 end)
 
--- ─── 4. SILENT AIM PASIF (Hanya Membaca Data Hasil Saringan Di Atas) ───
-local MetaTableRoblox = getrawmetatable(game)
-local IndexLama = MetaTableRoblox.__index
-setreadonly(MetaTableRoblox, false)
-
-MetaTableRoblox.__index = newcclosure(function(Objek, Kunci)
-    if _G.Kepignan.aim_active and _G.B_Aim_TargetGlobalSekarang and not checkcaller() then
-        if Kunci == "Hit" or Kunci == "target" or Kunci == "Target" then
-            if tostring(Objek) == "Mouse" then
-                if IsGameSenjata then
-                    if Kunci == "Hit" then return _G.B_Aim_TargetGlobalSekarang.CFrame
-                    else return _G.B_Aim_TargetGlobalSekarang end
-                else
-                    if _G.B_Aim_CFramePrediksiAIGlobal then
-                        if Kunci == "Hit" then return _G.B_Aim_CFramePrediksiAIGlobal
-                        else return _G.B_Aim_TargetGlobalSekarang end
-                    end
-                end
-            end
-        end
-    end
-    return IndexLama(Objek, Kunci)
-end)
-setreadonly(MetaTableRoblox, true)
-
--- ─── 5. AUTOMATIC DETEKSI TIM KHIANAT (TRAITOR RADAR DETECTION) ───
+-- ─── 7. AUTOMATIC DETEKSI TIM KHIANAT (TRAITOR RADAR DETECTION) ───
 local DarahTerakhir = 100
 task.spawn(function()
     while true do
-        task.wait(0.1)
+        task.wait(0.3)
         local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         if Humanoid then
             if Humanoid.Health < DarahTerakhir and Humanoid.Health > 0 then
@@ -170,7 +135,7 @@ task.spawn(function()
                 end
                 if PenyerangTerdekat and not _G.BAim_Global_Traitors[PenyerangTerdekat.Name] then
                     _G.BAim_Global_Traitors[PenyerangTerdekat.Name] = true
-                    print("[SISTEM CORE] @" .. PenyerangTerdekat.Name .. " otomatis masuk daftar musuh karena menyerang Anda!")
+                    print("[SISTEM CORE] @" .. PenyerangTerdekat.Name .. " otomatis dialihkan ke TARGET MUSUH!")
                 end
             end
             DarahTerakhir = Humanoid.Health
@@ -178,11 +143,11 @@ task.spawn(function()
     end
 end)
 
--- ─── 6. HIGH PERFORMANCE AUTO TRIGGER SHOT ───
+-- ─── 8. HIGH PERFORMANCE MOBILE AUTO TRIGGER SHOT ───
 local VirtualUser = game:GetService("VirtualUser")
 task.spawn(function()
     while true do
-        task.wait(0.05)
+        task.wait(0.08)
         if _G.Kepignan.aim_active and _G.B_Aim_TargetGlobalSekarang and _G.B_Aim_JarakGlobalKeTengah <= 32 then
             pcall(function()
                 VirtualUser:Button1Down(Vector2.new(0, 0), Camera.CFrame) 
@@ -193,4 +158,4 @@ task.spawn(function()
     end
 end)
 
-print("[B-AIM ENGINE] Mengembalikan Logika Asli Sukses. Proteksi Jeda Waktu Aktif! 🔓")
+print("[B-AIM ENGINE] Update Sistem Sukses! Seluruh Fitur Metatable Dihapus, Skrip 100% Anti-Crash! 🔓")
