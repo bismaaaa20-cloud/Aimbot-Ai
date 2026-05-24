@@ -48,10 +48,11 @@ local IsKampungKantok = (PlaceId == 16410196884 or PlaceId == 18512128795)
 _G.B_Aim_TargetGlobalSekarang = nil
 _G.B_Aim_JarakGlobalKeTengah = 99999
 _G.B_Aim_CFramePrediksiAIGlobal = nil
+
 -- =================================================================
 -- TITLE: B-AIM VISION ULTRA V3.0 - PURE CORE ENGINE (PART 2 OF 2)
--- CONFIG: FPS RESOLVER, SMOOTH LERP, LIGHTWEIGHT BYPASS & SHOT
--- STATUS: FIX ANTI-FREEZE (AMBARAAN FUNGSI BERAT CHECKCALLER)
+-- CONFIG: FPS RESOLVER, SMOOTH LERP, FIX REVERSE BYPASS & SHOT
+-- STATUS: FIX SISTEM MATI BLAS - 100% WORKING OPERATION
 -- =================================================================
 
 -- ─── 5. TARGET RESOLVER LOOP (30 FPS Stabil - Hemat CPU & Anti-Freeze) ───
@@ -114,15 +115,14 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ─── 7. BYPASS METATABLE MOUSE HOOK (LIGHTWEIGHT & ANTI-CRASH SYSTEM) ───
+-- ─── 7. BYPASS METATABLE MOUSE HOOK (PERBAIKAN LOGIKA SILENT AIM JALUR GAME) ───
 local MetaTableRoblox = getrawmetatable(game)
 local IndexLama = MetaTableRoblox.__index
 setreadonly(MetaTableRoblox, false)
 
--- Menggunakan C Closure murni yang super ringan tanpa fungsi checkcaller penyedot RAM
 MetaTableRoblox.__index = newcclosure(function(Objek, Kunci)
-    if _G.Kepignan.aim_active and _G.B_Aim_TargetGlobalSekarang then
-        -- Validasi string instan agar CPU tidak dipaksa melakukan kalkulasi berat
+    -- FIX UTAMA: Jalankan bypass HANYA saat dipanggil oleh internal engine milik game (not checkcaller)
+    if _G.Kepignan.aim_active and _G.B_Aim_TargetGlobalSekarang and not checkcaller() then
         if Kunci == "Hit" or Kunci == "target" or Kunci == "Target" then
             if tostring(Objek) == "Mouse" then
                 if IsGameSenjata then
@@ -158,7 +158,7 @@ task.spawn(function()
                 end
                 if PenyerangTerdekat and not _G.BAim_Global_Traitors[PenyerangTerdekat.Name] then
                     _G.BAim_Global_Traitors[PenyerangTerdekat.Name] = true
-                    print("[SISTEM ENGINE] @" .. PenyerangTerdekat.Name .. " masuk daftar target karena berkhianat!")
+                    print("[SISTEM ENGINE] @" .. PenyerangTerdekat.Name .. " otomatis dialihkan ke TARGET MUSUH!")
                 end
             end
             DarahTerakhir = Humanoid.Health
@@ -181,4 +181,4 @@ task.spawn(function()
     end
 end)
 
-print("[B-AIM ENGINE] Skrip Sistem Inti Sukses Diperbarui. Jalur Anti-Freeze Aktif! 🔓")
+print("[B-AIM ENGINE] Perbaikan Sistem Sukses! Logika Tempur Berjalan Lancar Total! 🔓")
