@@ -48,14 +48,13 @@ local IsKampungKantok = (PlaceId == 16410196884 or PlaceId == 18512128795)
 _G.B_Aim_TargetGlobalSekarang = nil
 _G.B_Aim_JarakGlobalKeTengah = 99999
 _G.B_Aim_CFramePrediksiAIGlobal = nil
-
 -- =================================================================
 -- TITLE: B-AIM VISION ULTRA V3.0 - PURE CORE ENGINE (PART 2 OF 2)
--- CONFIG: FPS RESOLVER, SMOOTH LERP, ANTI-CHEAT PROTECTION & SHOT
--- STATUS: MURNI SISTEM (TIDAK ADA KODE UI / TAMPILAN SAMA SEKALI!)
+-- CONFIG: FPS RESOLVER, SMOOTH LERP, LIGHTWEIGHT BYPASS & SHOT
+-- STATUS: FIX ANTI-FREEZE (AMBARAAN FUNGSI BERAT CHECKCALLER)
 -- =================================================================
 
--- ─── 5. TARGET RESOLVER LOOP (Dibatasi 30 FPS Stabil - Hemat CPU & Anti-Freeze) ───
+-- ─── 5. TARGET RESOLVER LOOP (30 FPS Stabil - Hemat CPU & Anti-Freeze) ───
 task.spawn(function()
     while true do
         task.wait(0.033)
@@ -115,23 +114,24 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ─── 7. BYPASS METATABLE MOUSE HOOK & PERISAI PROTEKSI ANTI-CHEAT (STEALTH) ───
+-- ─── 7. BYPASS METATABLE MOUSE HOOK (LIGHTWEIGHT & ANTI-CRASH SYSTEM) ───
 local MetaTableRoblox = getrawmetatable(game)
 local IndexLama = MetaTableRoblox.__index
 setreadonly(MetaTableRoblox, false)
 
+-- Menggunakan C Closure murni yang super ringan tanpa fungsi checkcaller penyedot RAM
 MetaTableRoblox.__index = newcclosure(function(Objek, Kunci)
-    -- Fitur Proteksi Keamanan: Hanya eksekusi jika dipanggil oleh script eksternal pengeksekusi
-    if checkcaller and checkcaller() then
-        if _G.Kepignan.aim_active and _G.B_Aim_TargetGlobalSekarang then
-            if tostring(Objek) == "Mouse" and (Kunci == "Hit" or Kunci == "target" or Kunci == "Target") then
+    if _G.Kepignan.aim_active and _G.B_Aim_TargetGlobalSekarang then
+        -- Validasi string instan agar CPU tidak dipaksa melakukan kalkulasi berat
+        if Kunci == "Hit" or Kunci == "target" or Kunci == "Target" then
+            if tostring(Objek) == "Mouse" then
                 if IsGameSenjata then
                     if Kunci == "Hit" then return _G.B_Aim_TargetGlobalSekarang.CFrame
-                    elseif Kunci == "target" or Kunci == "Target" then return _G.B_Aim_TargetGlobalSekarang end
+                    else return _G.B_Aim_TargetGlobalSekarang end
                 else
                     if _G.B_Aim_CFramePrediksiAIGlobal then
                         if Kunci == "Hit" then return _G.B_Aim_CFramePrediksiAIGlobal
-                        elseif Kunci == "target" or Kunci == "Target" then return _G.B_Aim_TargetGlobalSekarang end
+                        else return _G.B_Aim_TargetGlobalSekarang end
                     end
                 end
             end
@@ -139,15 +139,6 @@ MetaTableRoblox.__index = newcclosure(function(Objek, Kunci)
     end
     return IndexLama(Objek, Kunci)
 end)
-
--- Menyembunyikan perubahan fungsi agar tidak dilacak oleh pemindai memori game lokal
-if hookfunction then
-    pcall(function()
-        hookfunction(MetaTableRoblox.__index, newcclosure(function(...)
-            return IndexLama(...)
-        end))
-    end)
-end
 setreadonly(MetaTableRoblox, true)
 
 -- ─── 8. AUTOMATIC DETEKSI TIM KHIANAT (TRAITOR RADAR DETECTION) ───
@@ -190,4 +181,4 @@ task.spawn(function()
     end
 end)
 
-print("[B-AIM ENGINE] Skrip Sistem Inti Selesai Terpasang Sempurna + Proteksi Anti-Cheat Aktif! 🔓")
+print("[B-AIM ENGINE] Skrip Sistem Inti Sukses Diperbarui. Jalur Anti-Freeze Aktif! 🔓")
