@@ -1,12 +1,23 @@
 -- =================================================================
--- TITLE: B-AIM VISION ULTRA V3.0 - PURE CORE ENGINE (PART 1 OF 2)
--- CONFIG: MEMORY STATE SYNCHRONIZER, AUTO DETECTOR & AI PREDICTION
--- STATUS: MURNI SISTEM (TIDAK ADA KODE UI / TAMPILAN SAMA SEKALI!)
+-- TITLE: B-AIM VISION ULTRA V3.0 - CORE SYSTEM ENGINE (PART 1 OF 2)
+-- CONFIG: CLOUD LINK LOADER, SHARED MEMORY & PREDICTIVE AI CACHE
+-- STATUS: TERPISAH (JANGAN DIGABUNG DENGAN SKRIP UI UTAMA!)
 -- =================================================================
 
-print("[B-AIM SYSTEM] Memulai inisialisasi mesin tempur utama...")
+print("[B-AIM ENGINE] Memulai inisialisasi modul sistem bagian 1...")
 
--- ─── 1. STRUKTUR DATA STATE GLOBAL (REFERENSI UNTUK SCRIPT UI NANTI) ───
+-- ─── 0. AUTOMATIC LOADER SINKRONISASI UI CLOUD GITHUB ───
+local StatusUI, HasilkanUI = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/bismaaaa20-cloud/Aimbot-Ai/refs/heads/main/b_aim_ui.lua"))()
+end)
+
+if StatusUI then
+    print("[B-AIM LOADER] Sukses sinkronisasi UI Cloud dari GitHub Anda!")
+else
+    warn("[B-AIM ERROR] Gagal mengambil UI dari GitHub. Menggunakan fallback lokal: " .. tostring(HasilkanUI))
+end
+
+-- ─── 1. SINKRONISASI MEMORI STATE GLOBAL (DIBACA OLEH UI DAN ENGINE) ───
 _G.BAim_Global_Traitors = _G.BAim_Global_Traitors or {}
 _G.Kepignan = _G.Kepignan or {
     aim_active = true,
@@ -20,76 +31,24 @@ _G.Kepignan = _G.Kepignan or {
     esp_active = true
 }
 
--- Game Services API Bawaan Roblox
+-- Roblox Engine Services
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local RunService = game:GetService("RunService")
 local Stats = game:GetService("Stats")
 
--- Smart Game Detector Cache (Berdasarkan PlaceId)
+-- Cache Pendeteksi Game Adaptif
 local PlaceId = game.PlaceId
 local IsGameSenjata = (PlaceId == 17625359962 or PlaceId == 286090424)
 local IsBloxFruits = (PlaceId == 2753915549 or PlaceId == 4442272125 or PlaceId == 7449423635)
 local IsKampungKantok = (PlaceId == 16410196884 or PlaceId == 18512128795)
 
--- 🌟 GLOBAL REFERENCE CACHE PUSAT (Supaya Script UI Terpisah Bisa Membaca Data Musuh)
+-- 🌟 SINGLE CENTRAL CACHE POINTER (Variabel Penampung Sinkronisasi)
 _G.B_Aim_TargetGlobalSekarang = nil
 _G.B_Aim_JarakGlobalKeTengah = 99999
 _G.B_Aim_CFramePrediksiAIGlobal = nil
 
--- Memori Internal Kalkulasi Vektor
-local PosisiMusuhTerakhir = nil
-local WaktuDeteksiTerakhir = tick()
-
--- ─── 2. KALKULATOR PREDIKSI TARGET BERBASIS PING & VELOSITAS NYATA ───
-local function HitungKoordinatPrediksiAI(TargetPart)
-    if not TargetPart then return nil end
-    local WaktuSekarang = tick()
-    local DeltaTime = WaktuSekarang - WaktuDeteksiTerakhir
-    local PosisiAsliMusuh = TargetPart.Position
-    local PosisiMasaDepan = PosisiAsliMusuh
-    
-    if PosisiMusuhTerakhir and DeltaTime > 0 and DeltaTime < 0.1 then
-        local VelositasNyata = (PosisiAsliMusuh - PosisiMusuhTerakhir) / DeltaTime
-        local NetworkPing = 0.06
-        if Stats:FindFirstChild("Network") and Stats.Network:FindFirstChild("ServerToClientPing") then
-            NetworkPing = Stats.Network.ServerToClientPing:GetValue() / 1000
-        end
-        local JarakPrediksiAI = math.clamp(0.12 + (NetworkPing * 1.1), 0.1, 0.45)
-        PosisiMasaDepan = PosisiAsliMusuh + (VelositasNyata * JarakPrediksiAI)
-    end
-    
-    PosisiMusuhTerakhir = PosisiAsliMusuh
-    WaktuDeteksiTerakhir = WaktuSekarang
-    return CFrame.new(PosisiMasaDepan)
-end
-
--- ─── 3. INTERPRETER FILTER TARGET MUSUH SEJATI ───
-local function ApakahMusuhSejati(Player)
-    local ModeSaatIni = _G.Kepignan.target_mode or "Tim Filter"
-    if ModeSaatIni == "Spesifik Target (5s)" then return Player.Name == _G.Kepignan.target_spesifik_nama end
-    if ModeSaatIni == "Semua Terdekat (FFA)" then return true end
-    if ModeSaatIni == "Tim Filter" then
-        if _G.BAim_Global_Traitors[Player.Name] then return true end
-        if LocalPlayer.Neutral or Player.Neutral then return true end
-        if Player.Team ~= LocalPlayer.Team or Player.TeamColor ~= LocalPlayer.TeamColor then return true end
-    end
-    return false 
-end
-
--- ─── 4. SENSOR ANTI-TEMBUS TEMBOK (WALL CHECK RAYCAST FILTER) ───
-local function ApakahTargetTerlihat(BagianTubuh)
-    local KarakterSaya = LocalPlayer.Character
-    if not KarakterSaya then return false end
-    local ParameterRaycast = RaycastParams.new()
-    ParameterRaycast.FilterType = Enum.RaycastFilterType.Exclude
-    ParameterRaycast.FilterDescendantsInstances = {KarakterSaya, Camera}
-    ParameterRaycast.IgnoreWater = true
-    local HasilRaycast = workspace:Raycast(Camera.CFrame.Position, (BagianTubuh.Position - Camera.CFrame.Position), ParameterRaycast)
-    if HasilRaycast then return HasilRaycast.Instance:IsDescendantOf(BagianTubuh.Parent) end
-    return true
-end
 -- =================================================================
 -- TITLE: B-AIM VISION ULTRA V3.0 - PURE CORE ENGINE (PART 2 OF 2)
 -- CONFIG: FPS RESOLVER, SMOOTH LERP, ANTI-CHEAT PROTECTION & SHOT
